@@ -157,9 +157,15 @@ describe('cli/common', () => {
   describe('createEmbedder', () => {
     const originalDevice = process.env['RAG_DEVICE']
     const originalDtype = process.env['RAG_DTYPE']
+    const originalTitlePrefix = process.env['EMBED_TITLE_PREFIX']
 
     afterEach(() => {
       mocks.Embedder.mockReset()
+      if (originalTitlePrefix === undefined) {
+        delete process.env['EMBED_TITLE_PREFIX']
+      } else {
+        process.env['EMBED_TITLE_PREFIX'] = originalTitlePrefix
+      }
       if (originalDevice === undefined) {
         delete process.env['RAG_DEVICE']
       } else {
@@ -210,6 +216,30 @@ describe('cli/common', () => {
       createEmbedder(makeConfig({ modelName: 'custom/model', cacheDir: '/custom/cache' }))
 
       expect(mocks.Embedder).toHaveBeenCalledWith(expect.objectContaining({ dtype: 'q8' }))
+    })
+
+    it('enables the title prefix only when EMBED_TITLE_PREFIX is on', () => {
+      delete process.env['EMBED_TITLE_PREFIX']
+      createEmbedder(makeConfig({}))
+      expect(mocks.Embedder.mock.calls[0]?.[0]).not.toHaveProperty('titlePrefix')
+
+      process.env['EMBED_TITLE_PREFIX'] = 'on'
+      createEmbedder(makeConfig({}))
+      expect(mocks.Embedder.mock.calls[1]?.[0]).toMatchObject({ titlePrefix: true })
+    })
+
+    it('warns and leaves the title prefix off for an invalid EMBED_TITLE_PREFIX', () => {
+      process.env['EMBED_TITLE_PREFIX'] = 'maybe'
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+      try {
+        createEmbedder(makeConfig({}))
+        expect(mocks.Embedder.mock.calls[0]?.[0]).not.toHaveProperty('titlePrefix')
+        expect(errorSpy).toHaveBeenCalledWith(
+          expect.stringContaining('Invalid EMBED_TITLE_PREFIX value: "maybe"')
+        )
+      } finally {
+        errorSpy.mockRestore()
+      }
     })
 
     it('omits dtype when RAG_DTYPE is whitespace-only', () => {

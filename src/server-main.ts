@@ -1,6 +1,7 @@
 // MCP Server entry point
 import {
   type ParseResult,
+  parseBooleanEnv,
   parseGroupingMode,
   parseHybridWeight,
   parseMaxDistance,
@@ -40,21 +41,8 @@ export function parseChunkMinLength(value: string | undefined): ParseResult<numb
 }
 
 /** Parse the independent PDF image-storage toggle. */
-export function parseStoreImages(value: string | undefined): ParseResult<boolean> {
-  const normalized = value?.trim().toLowerCase() ?? ''
-  if (normalized.length === 0) {
-    return { value: false }
-  }
-  if (['1', 'true', 'yes', 'on'].includes(normalized)) {
-    return { value: true }
-  }
-  if (['0', 'false', 'no', 'off'].includes(normalized)) {
-    return { value: false }
-  }
-  return {
-    value: false,
-    warning: `Invalid STORE_IMAGES value: "${value?.slice(0, 100)}". Expected one of 1, true, yes, on, 0, false, no, or off. Using false.`,
-  }
+export function parseStoreImages(value: string | undefined): ReturnType<typeof parseBooleanEnv> {
+  return parseBooleanEnv('STORE_IMAGES', value)
 }
 
 /**
@@ -196,6 +184,7 @@ function applyOptionalSettings(config: ServerConfig, env: NodeJS.ProcessEnv): st
   const hybridWeight = parseHybridWeight(env['RAG_HYBRID_WEIGHT'])
   const chunkMinLength = parseChunkMinLength(env['CHUNK_MIN_LENGTH'])
   const storeImages = parseStoreImages(env['STORE_IMAGES'])
+  const titlePrefix = parseBooleanEnv('EMBED_TITLE_PREFIX', env['EMBED_TITLE_PREFIX'])
   const rerankCommand = parseRerankCmd(env['RAG_RERANK_CMD'])
   const rerankTimeoutMs = parseRerankTimeoutMs(env['RAG_RERANK_TIMEOUT_MS'])
 
@@ -217,7 +206,8 @@ function applyOptionalSettings(config: ServerConfig, env: NodeJS.ProcessEnv): st
   if (rerankCommand.value !== undefined) {
     config.rerankCommand = rerankCommand.value
   }
-  config.storeImages = storeImages.value ?? false
+  config.storeImages = storeImages.value
+  config.titlePrefix = titlePrefix.value
   config.rerankTimeoutMs = rerankTimeoutMs.value ?? DEFAULT_RERANK_TIMEOUT_MS
 
   return [
@@ -227,6 +217,7 @@ function applyOptionalSettings(config: ServerConfig, env: NodeJS.ProcessEnv): st
     hybridWeight,
     chunkMinLength,
     storeImages,
+    titlePrefix,
     rerankCommand,
     rerankTimeoutMs,
   ]

@@ -48,8 +48,8 @@ describe('buildChunksAndEmbeddings title prefix', () => {
     const embedBatch = vi.fn().mockResolvedValue([[1, 0]])
     const result = await buildChunksAndEmbeddings(
       'Body.',
-      asDouble<SemanticChunker>({ chunkText, titlePrefix }),
-      { embedBatch, ...embedder },
+      asDouble<SemanticChunker>({ chunkText }),
+      { embedBatch, titlePrefix, ...embedder },
       { title: 'Support Rotation' }
     )
     return { result, chunkText, embedBatch }
@@ -66,7 +66,7 @@ describe('buildChunksAndEmbeddings title prefix', () => {
   it('embeds body text unchanged when disabled', async () => {
     const { chunkText, embedBatch } = await run(false)
 
-    expect(chunkText.mock.calls[0]?.[3]).toBeUndefined()
+    expect(chunkText.mock.calls[0]?.[3]).toBe('')
     expect(embedBatch).toHaveBeenCalledWith(['Body.'])
   })
 

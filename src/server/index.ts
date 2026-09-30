@@ -340,11 +340,13 @@ export class RAGServer {
     if (config.dtype !== undefined) {
       embedderConfig.dtype = config.dtype
     }
+    if (config.titlePrefix) {
+      embedderConfig.titlePrefix = true
+    }
     this.embedder = new Embedder(embedderConfig)
-    this.chunker = new SemanticChunker({
-      ...(config.chunkMinLength !== undefined ? { minChunkLength: config.chunkMinLength } : {}),
-      ...(config.titlePrefix !== undefined ? { titlePrefix: config.titlePrefix } : {}),
-    })
+    this.chunker = new SemanticChunker(
+      config.chunkMinLength !== undefined ? { minChunkLength: config.chunkMinLength } : {}
+    )
     // Always construct the parser with the multi-root shape — the parser
     // accepts a single-element `baseDirs` array as the byte-equivalent of
     // the legacy `baseDir` shape, so passing `this.baseDirs` covers both

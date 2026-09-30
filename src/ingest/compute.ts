@@ -7,7 +7,7 @@
 import { createHash, randomUUID } from 'node:crypto'
 import { basename, extname } from 'node:path'
 import type { AtomicTextRange, SemanticChunker, TextChunk } from '../chunker/index.js'
-import type { EmbedderInterface } from '../chunker/semantic-chunker.js'
+import { type EmbedderInterface, resolveContainmentBudget } from '../chunker/semantic-chunker.js'
 import type { ParseResult } from '../parser/index.js'
 import type { ImageRendition } from '../pdf-visual/types.js'
 import { MAX_VISUAL_RENDITION_BYTES } from '../utils/limits.js'
@@ -25,29 +25,25 @@ function distanceToSpan(offset: number, chunk: TextChunk): number {
 }
 
 /**
- * The `Title:` header a chunk is embedded behind, or `undefined` when the
- * chunker does not opt in, there is no title, or the header would take more
- * than half the embedder's token window: the chunker budgets every chunk for
- * it, so a header near the cap would shred the body into near-empty chunks.
+ * The `Title:` header a chunk is embedded behind, or `''` when the embedder
+ * does not opt in, there is no title, or the header would take more than half
+ * the token window: the chunker budgets every chunk for it, so a header near
+ * the cap would shred the body into near-empty chunks.
  */
 async function resolveTitlePrefix(
-  title: string | null,
-  chunker: SemanticChunker,
+  title: string | null | undefined,
   embedder: EmbedderInterface
-): Promise<string | undefined> {
-  if (!chunker.titlePrefix || !title) {
-    return undefined
+): Promise<string> {
+  if (!embedder.titlePrefix || !title) {
+    return ''
   }
   const prefix = `Title: ${title}\n\n`
-  if (!embedder.getTokenLimit || !embedder.countTokens) {
+  const budget = await resolveContainmentBudget(embedder, '')
+  if (budget === null) {
     return prefix
   }
-  const cap = await embedder.getTokenLimit()
-  if (cap === null) {
-    return prefix
-  }
-  const [tokens = 0] = await embedder.countTokens([prefix])
-  return tokens <= cap / 2 ? prefix : undefined
+  const [tokens = 0] = await budget.countTokens([prefix])
+  return tokens <= budget.cap / 2 ? prefix : ''
 }
 
 /** `embeddings` has the same length as `chunks`, index for index. */
@@ -122,9 +118,8 @@ export async function buildChunksAndEmbeddings(
     title?: string | null | undefined
   } = {}
 ): Promise<BuildChunksAndEmbeddingsResult> {
-  const { atomicRanges, title = null } = options
-  const prefix = await resolveTitlePrefix(title, chunker, embedder)
-  const chunks = await chunker.chunkText(text, embedder, atomicRanges, prefix)
+  const prefix = await resolveTitlePrefix(options.title, embedder)
+  const chunks = await chunker.chunkText(text, embedder, options.atomicRanges, prefix)
   // F5: Skip `embedBatch` entirely on zero chunks. `embedBatch` runs
   // `ensureInitialized()` (which triggers the ~90MB MiniLM download on a
   // cold cache) BEFORE checking for the empty-array short-circuit, so an
@@ -134,13 +129,13 @@ export async function buildChunksAndEmbeddings(
   }
   // The prefix reaches the embedding only: stored text, the FTS index and
   // returned results stay body-only.
-  const embeddings = await embedder.embedBatch(chunks.map((chunk) => (prefix ?? '') + chunk.text))
+  const embeddings = await embedder.embedBatch(chunks.map((chunk) => prefix + chunk.text))
   return { chunks, embeddings }
 }
 
 /**
  * Preserve the parser content/range mapping at one shared boundary. The title
- * affects chunks only when the chunker opts into the title prefix.
+ * affects embeddings only when the embedder opts into the title prefix.
  */
 export async function buildChunksFromParseResult(
   result: ParseResult,
@@ -149,7 +144,7 @@ export async function buildChunksFromParseResult(
 ): Promise<BuildChunksFromParseResultResult> {
   const computed = await buildChunksAndEmbeddings(result.content, chunker, embedder, {
     atomicRanges: result.atomicRanges,
-    title: result.title || null,
+    title: result.title,
   })
   const visualAttachments = new Map<number, VisualAttachment[]>()
   if (!result.imageAnchors?.length || computed.chunks.length === 0) {

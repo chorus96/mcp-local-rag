@@ -41,7 +41,6 @@ describe('SemanticChunker', () => {
       initConst: 1.5,
       c: 0.9,
       minChunkLength: 50,
-      titlePrefix: false,
     }
     chunker = new SemanticChunker(config)
 

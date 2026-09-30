@@ -345,7 +345,7 @@ Run `npx mcp-local-rag --help` for the complete command reference.
 
 The CLI does not read MCP client configuration. Set the same environment variables or flags if
 both interfaces should share an index. In particular, `MODEL_NAME` and the CLI `--model-name`
-must match for a shared database.
+must match for a shared database, and so must `EMBED_TITLE_PREFIX`.
 
 `query` writes its results to stdout as JSON, best match first, so it can be piped into
 another tool. The field-by-field contract is in
@@ -448,6 +448,7 @@ variables and flags; image storage on CLI ingestion and sync is enabled only wit
 | `MODEL_NAME` | `--model-name` | `Xenova/all-MiniLM-L6-v2` | Hugging Face embedding model |
 | `MAX_FILE_SIZE` | `--max-file-size` | `104857600` (100MB) | Maximum file size in bytes |
 | `CHUNK_MIN_LENGTH` | `--chunk-min-length` | `50` | Minimum length in characters (1–10000) for ordinary chunks; a fragment of content split to fit the model's token limit can be shorter |
+| `EMBED_TITLE_PREFIX` | N/A | `false` | Embed each chunk behind a `Title:` line with its document title. Returned chunk text stays unchanged. Re-ingest after changing it |
 | `STORE_IMAGES` | N/A | `false` | MCP server only: store supported PDF/DOCX images and return them with matched chunks. CLI uses `--images`. |
 | `RAG_DEVICE` | N/A | `cpu` | ONNX Runtime execution device |
 | `RAG_DTYPE` | N/A | `fp32` | Embedding dtype passed to the selected model |
@@ -491,7 +492,7 @@ mcp-local-rag generates embeddings with mean pooling and L2 normalization. When 
 model, check whether these settings match its recommended inference setup, since the pooling
 method can affect retrieval quality.
 
-Changing `MODEL_NAME`, `RAG_DEVICE`, or `RAG_DTYPE` can make existing vectors incompatible.
+Changing `MODEL_NAME`, `RAG_DEVICE`, `RAG_DTYPE`, or `EMBED_TITLE_PREFIX` can make existing vectors incompatible.
 Use a new `DB_PATH` or delete the existing index and re-ingest after changing the embedding
 configuration.
 

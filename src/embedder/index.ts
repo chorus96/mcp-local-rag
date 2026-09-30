@@ -32,6 +32,11 @@ export interface EmbedderConfig {
    * distinction gates failure-path error enrichment, so keep it.
    */
   dtype?: string
+  /**
+   * Embed document chunks behind a `Title:` line naming their document
+   * (default: false). Read by ingestion, which builds the embedding input.
+   */
+  titlePrefix?: boolean
 }
 
 interface IndexedEmbeddingInput {
@@ -268,6 +273,10 @@ export class Embedder {
 
   constructor(config: EmbedderConfig) {
     this.config = config
+  }
+
+  get titlePrefix(): boolean {
+    return this.config.titlePrefix ?? false
   }
 
   /**

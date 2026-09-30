@@ -26,11 +26,6 @@ export interface SemanticChunkerConfig {
   c: number
   /** Minimum chunk length in characters (default: 50) */
   minChunkLength: number
-  /**
-   * Embed each chunk behind a `Title:` line naming its document (default:
-   * false). Only the embedding input changes; stored chunk text does not.
-   */
-  titlePrefix: boolean
 }
 
 /**
@@ -45,6 +40,8 @@ export interface EmbedderInterface {
   getTokenLimit?(): Promise<number | null>
   /** True, unclamped token lengths of each text. */
   countTokens?(texts: string[]): Promise<number[]>
+  /** Whether ingestion embeds chunks behind their document title. */
+  readonly titlePrefix?: boolean
 }
 
 // ============================================
@@ -122,7 +119,7 @@ function joinUnits(units: readonly SentenceUnit[]): string {
  * Every measurement is taken with `textPrefix` prepended, since the caller
  * embeds each chunk behind it.
  */
-async function resolveContainmentBudget(
+export async function resolveContainmentBudget(
   embedder: EmbedderInterface,
   textPrefix: string
 ): Promise<ContainmentBudget | null> {
@@ -234,7 +231,6 @@ const DEFAULT_SEMANTIC_CHUNKER_CONFIG: SemanticChunkerConfig = {
   initConst: 1.5,
   c: 0.9,
   minChunkLength: DEFAULT_MIN_CHUNK_LENGTH,
-  titlePrefix: false,
 }
 
 // ============================================
@@ -251,11 +247,6 @@ export class SemanticChunker {
 
   constructor(config: Partial<SemanticChunkerConfig> = {}) {
     this.config = { ...DEFAULT_SEMANTIC_CHUNKER_CONFIG, ...config }
-  }
-
-  /** Whether callers should embed chunks behind their document title. */
-  get titlePrefix(): boolean {
-    return this.config.titlePrefix
   }
 
   /**

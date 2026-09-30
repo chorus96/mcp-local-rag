@@ -358,6 +358,7 @@ El servidor MCP lee variables de entorno. La CLI acepta las mismas variables y l
 | `MODEL_NAME` | `--model-name` | `Xenova/all-MiniLM-L6-v2` | Modelo de embeddings de Hugging Face |
 | `MAX_FILE_SIZE` | `--max-file-size` | `104857600` (100 MB) | Tamaño máximo del archivo en bytes |
 | `CHUNK_MIN_LENGTH` | `--chunk-min-length` | `50` | Longitud mínima de un segmento normal en caracteres (1–10000); un fragmento resultante de dividir contenido para respetar el límite de tokens del modelo puede ser más corto |
+| `EMBED_TITLE_PREFIX` | N/A | `false` | Genera el embedding de cada segmento precedido de una línea `Title:` con el título del documento. El texto devuelto no cambia. Vuelva a ingerir los documentos tras cambiarlo |
 | `RAG_DEVICE` | No disponible | `cpu` | Dispositivo de ejecución de ONNX Runtime |
 | `RAG_DTYPE` | No disponible | `fp32` | Tipo de datos de los embeddings que recibe el modelo seleccionado |
 
