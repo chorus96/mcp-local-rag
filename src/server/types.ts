@@ -33,6 +33,8 @@ interface RAGServerConfigBase {
   maxFiles?: number
   /** Minimum chunk length in characters (optional, default: 50) */
   chunkMinLength?: number
+  /** Embed each chunk behind its document title (optional, default: false) */
+  titlePrefix?: boolean
   /** Store bounded PDF regions and Mammoth-produced DOCX images. */
   storeImages?: boolean
   /** External reranker command, as configured. Unset disables reranking. */

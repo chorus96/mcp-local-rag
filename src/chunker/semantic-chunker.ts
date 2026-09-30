@@ -26,6 +26,11 @@ export interface SemanticChunkerConfig {
   c: number
   /** Minimum chunk length in characters (default: 50) */
   minChunkLength: number
+  /**
+   * Embed each chunk behind a `Title:` line naming its document (default:
+   * false). Only the embedding input changes; stored chunk text does not.
+   */
+  titlePrefix: boolean
 }
 
 /**
@@ -113,9 +118,13 @@ function joinUnits(units: readonly SentenceUnit[]): string {
 /**
  * The embedder's token budget, or `null` when the optional members are absent
  * or no limit could be resolved. Containment is then skipped entirely.
+ *
+ * Every measurement is taken with `textPrefix` prepended, since the caller
+ * embeds each chunk behind it.
  */
 async function resolveContainmentBudget(
-  embedder: EmbedderInterface
+  embedder: EmbedderInterface,
+  textPrefix: string
 ): Promise<ContainmentBudget | null> {
   const { getTokenLimit, countTokens } = embedder
   if (!getTokenLimit || !countTokens) {
@@ -125,7 +134,14 @@ async function resolveContainmentBudget(
   if (cap === null) {
     return null
   }
-  return { cap, countTokens: (texts) => countTokens.call(embedder, texts) }
+  return {
+    cap,
+    countTokens: (texts) =>
+      countTokens.call(
+        embedder,
+        texts.map((text) => textPrefix + text)
+      ),
+  }
 }
 
 /** One measurement pass over `texts`, rejecting a counter that drops inputs. */
@@ -218,6 +234,7 @@ const DEFAULT_SEMANTIC_CHUNKER_CONFIG: SemanticChunkerConfig = {
   initConst: 1.5,
   c: 0.9,
   minChunkLength: DEFAULT_MIN_CHUNK_LENGTH,
+  titlePrefix: false,
 }
 
 // ============================================
@@ -236,13 +253,21 @@ export class SemanticChunker {
     this.config = { ...DEFAULT_SEMANTIC_CHUNKER_CONFIG, ...config }
   }
 
+  /** Whether callers should embed chunks behind their document title. */
+  get titlePrefix(): boolean {
+    return this.config.titlePrefix
+  }
+
   /**
-   * Split text into semantically coherent chunks
+   * Split text into semantically coherent chunks. `textPrefix` is the text the
+   * caller will prepend to each chunk before embedding; it is not added to the
+   * returned chunks, but token containment budgets for it.
    */
   async chunkText(
     text: string,
     embedder: EmbedderInterface,
-    atomicRanges: readonly AtomicTextRange[] = []
+    atomicRanges: readonly AtomicTextRange[] = [],
+    textPrefix = ''
   ): Promise<TextChunk[]> {
     // Handle empty input
     if (!text || text.trim().length === 0) {
@@ -260,7 +285,7 @@ export class SemanticChunker {
       return []
     }
 
-    const budget = await resolveContainmentBudget(embedder)
+    const budget = await resolveContainmentBudget(embedder, textPrefix)
     const units = budget ? await containUnits(sentenceUnits, budget) : sentenceUnits
 
     // Generate embeddings for all sentences

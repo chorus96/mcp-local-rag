@@ -41,6 +41,7 @@ describe('SemanticChunker', () => {
       initConst: 1.5,
       c: 0.9,
       minChunkLength: 50,
+      titlePrefix: false,
     }
     chunker = new SemanticChunker(config)
 
@@ -732,6 +733,22 @@ describe('Measured token containment', () => {
     for (const chunk of chunks) {
       expect(text.slice(chunk.sourceStart, chunk.sourceEnd)).toBe(chunk.text)
     }
+    expectOrderedSpans(chunks, text)
+  })
+
+  it('budgets for the text prefix the caller will embed each chunk behind', async () => {
+    const text = 'abcdefghij'.repeat(6)
+    const prefix = 'Title: T\n\n'
+    const { embedder } = measuredEmbedder(30)
+
+    const chunks = await containmentChunker().chunkText(text, embedder, [], prefix)
+
+    expect(chunks.map((chunk) => chunk.text).join('')).toBe(text)
+    expect(chunks.every((chunk) => !chunk.text.startsWith(prefix))).toBe(true)
+    expectMeasuredWithinCap(
+      chunks.map((chunk) => ({ ...chunk, text: prefix + chunk.text })),
+      30
+    )
     expectOrderedSpans(chunks, text)
   })
 

@@ -341,9 +341,10 @@ export class RAGServer {
       embedderConfig.dtype = config.dtype
     }
     this.embedder = new Embedder(embedderConfig)
-    this.chunker = new SemanticChunker(
-      config.chunkMinLength !== undefined ? { minChunkLength: config.chunkMinLength } : {}
-    )
+    this.chunker = new SemanticChunker({
+      ...(config.chunkMinLength !== undefined ? { minChunkLength: config.chunkMinLength } : {}),
+      ...(config.titlePrefix !== undefined ? { titlePrefix: config.titlePrefix } : {}),
+    })
     // Always construct the parser with the multi-root shape — the parser
     // accepts a single-element `baseDirs` array as the byte-equivalent of
     // the legacy `baseDir` shape, so passing `this.baseDirs` covers both
@@ -642,7 +643,14 @@ export class RAGServer {
     const meta = await loadMetaJson(filePath)
     const title = meta?.title ?? null
     console.error(`Read raw-data file: ${filePath} (${text.length} characters)`)
-    const { chunks, embeddings } = await buildChunksAndEmbeddings(text, this.chunker, this.embedder)
+    const { chunks, embeddings } = await buildChunksAndEmbeddings(
+      text,
+      this.chunker,
+      this.embedder,
+      {
+        title,
+      }
+    )
     return {
       title,
       omittedImageCount: 0,

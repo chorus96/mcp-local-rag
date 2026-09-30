@@ -24,6 +24,32 @@ function distanceToSpan(offset: number, chunk: TextChunk): number {
   return 0
 }
 
+/**
+ * The `Title:` header a chunk is embedded behind, or `undefined` when the
+ * chunker does not opt in, there is no title, or the header would take more
+ * than half the embedder's token window: the chunker budgets every chunk for
+ * it, so a header near the cap would shred the body into near-empty chunks.
+ */
+async function resolveTitlePrefix(
+  title: string | null,
+  chunker: SemanticChunker,
+  embedder: EmbedderInterface
+): Promise<string | undefined> {
+  if (!chunker.titlePrefix || !title) {
+    return undefined
+  }
+  const prefix = `Title: ${title}\n\n`
+  if (!embedder.getTokenLimit || !embedder.countTokens) {
+    return prefix
+  }
+  const cap = await embedder.getTokenLimit()
+  if (cap === null) {
+    return prefix
+  }
+  const [tokens = 0] = await embedder.countTokens([prefix])
+  return tokens <= cap / 2 ? prefix : undefined
+}
+
 /** `embeddings` has the same length as `chunks`, index for index. */
 export interface BuildChunksAndEmbeddingsResult {
   chunks: TextChunk[]
@@ -91,9 +117,14 @@ export async function buildChunksAndEmbeddings(
   text: string,
   chunker: SemanticChunker,
   embedder: EmbedderInterface,
-  atomicRanges?: readonly AtomicTextRange[]
+  options: {
+    atomicRanges?: readonly AtomicTextRange[] | undefined
+    title?: string | null | undefined
+  } = {}
 ): Promise<BuildChunksAndEmbeddingsResult> {
-  const chunks = await chunker.chunkText(text, embedder, atomicRanges)
+  const { atomicRanges, title = null } = options
+  const prefix = await resolveTitlePrefix(title, chunker, embedder)
+  const chunks = await chunker.chunkText(text, embedder, atomicRanges, prefix)
   // F5: Skip `embedBatch` entirely on zero chunks. `embedBatch` runs
   // `ensureInitialized()` (which triggers the ~90MB MiniLM download on a
   // cold cache) BEFORE checking for the empty-array short-circuit, so an
@@ -101,25 +132,25 @@ export async function buildChunksAndEmbeddings(
   if (chunks.length === 0) {
     return { chunks: [], embeddings: [] }
   }
-  const embeddings = await embedder.embedBatch(chunks.map((chunk) => chunk.text))
+  // The prefix reaches the embedding only: stored text, the FTS index and
+  // returned results stay body-only.
+  const embeddings = await embedder.embedBatch(chunks.map((chunk) => (prefix ?? '') + chunk.text))
   return { chunks, embeddings }
 }
 
 /**
- * Preserve the parser content/range mapping at one shared boundary. Display
- * title handling stays in each dispatch root because it does not affect chunks.
+ * Preserve the parser content/range mapping at one shared boundary. The title
+ * affects chunks only when the chunker opts into the title prefix.
  */
 export async function buildChunksFromParseResult(
   result: ParseResult,
   chunker: SemanticChunker,
   embedder: EmbedderInterface
 ): Promise<BuildChunksFromParseResultResult> {
-  const computed = await buildChunksAndEmbeddings(
-    result.content,
-    chunker,
-    embedder,
-    result.atomicRanges
-  )
+  const computed = await buildChunksAndEmbeddings(result.content, chunker, embedder, {
+    atomicRanges: result.atomicRanges,
+    title: result.title || null,
+  })
   const visualAttachments = new Map<number, VisualAttachment[]>()
   if (!result.imageAnchors?.length || computed.chunks.length === 0) {
     return { ...computed, visualAttachments, omittedImageCount: 0 }
