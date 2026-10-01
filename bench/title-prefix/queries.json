@@ -1,0 +1,441 @@
+[
+  {
+    "id": "c01",
+    "group": "context",
+    "query": "Do engineers on the support rotation attend sprint planning?",
+    "gold": [
+      {
+        "file": "ontano/Support Rotation.md",
+        "snippet": "skip sprint planning"
+      }
+    ]
+  },
+  {
+    "id": "c02",
+    "group": "context",
+    "query": "How long can the support rotation pair try to reproduce an issue before escalating?",
+    "gold": [
+      {
+        "file": "ontano/Support Rotation.md",
+        "snippet": "half a day"
+      }
+    ]
+  },
+  {
+    "id": "c03",
+    "group": "context",
+    "query": "What did we answer in ticket OPS 2318 about how often materialized views should refresh?",
+    "gold": [
+      {
+        "file": "ontano/tickets/OPS 2318.md",
+        "snippet": "ogni quarto d'ora"
+      }
+    ]
+  },
+  {
+    "id": "c04",
+    "group": "context",
+    "query": "OPS 2318 depot registry refresh",
+    "gold": [
+      {
+        "file": "ontano/tickets/OPS 2318.md",
+        "snippet": "refresh giornaliero"
+      }
+    ]
+  },
+  {
+    "id": "c05",
+    "group": "context",
+    "query": "How often are the water meters read?",
+    "gold": [
+      {
+        "file": "faggio/Sensors/Water meters.md",
+        "snippet": "15 minuti"
+      }
+    ]
+  },
+  {
+    "id": "c06",
+    "group": "context",
+    "query": "Who attended the water meters meeting?",
+    "gold": [
+      {
+        "file": "faggio/Sensors/Water meters.md",
+        "snippet": "Elena Russo"
+      }
+    ]
+  },
+  {
+    "id": "c07",
+    "group": "context",
+    "query": "When should a reference lookup be called as a service in batch jobs?",
+    "gold": [
+      {
+        "file": "ontano/hld/reference data/Reference lookups in batch.md",
+        "snippet": "normalizzazione indirizzi"
+      }
+    ]
+  },
+  {
+    "id": "c08",
+    "group": "context",
+    "query": "Which parameters does the reference lookup plan return?",
+    "gold": [
+      {
+        "file": "ontano/hld/reference data/Reference lookups in batch.md",
+        "snippet": "maxConcurrency"
+      }
+    ]
+  },
+  {
+    "id": "c09",
+    "group": "context",
+    "query": "What is the proposal for grouping alerts in alert routing?",
+    "gold": [
+      {
+        "file": "faggio/Sensors/Alert routing.md",
+        "snippet": "finestre di 5 minuti"
+      }
+    ]
+  },
+  {
+    "id": "c10",
+    "group": "context",
+    "query": "How long should data masking audit logs be retained?",
+    "gold": [
+      {
+        "file": "ontano/hld/data masking/Data Masking.md",
+        "snippet": "audit log retention"
+      }
+    ]
+  },
+  {
+    "id": "c11",
+    "group": "context",
+    "query": "Who approves a data masking policy change when the owner is away?",
+    "gold": [
+      {
+        "file": "ontano/hld/data masking/Data Masking.md",
+        "snippet": "on leave"
+      }
+    ]
+  },
+  {
+    "id": "c12",
+    "group": "context",
+    "query": "How do we scale the reliability chapter to new teams?",
+    "gold": [
+      {
+        "file": "roadmap.md",
+        "snippet": "Pair each new team"
+      }
+    ]
+  },
+  {
+    "id": "c13",
+    "group": "context",
+    "query": "Cosa abbiamo discusso nella riunione del 05-04-2022?",
+    "gold": [
+      {
+        "file": "larice/05-04-2022.md",
+        "snippet": ""
+      }
+    ]
+  },
+  {
+    "id": "b01",
+    "group": "body",
+    "query": "How many hours per sprint did request handling take?",
+    "gold": [
+      {
+        "file": "ontano/Support Rotation.md",
+        "snippet": "40 hours per sprint"
+      }
+    ]
+  },
+  {
+    "id": "b02",
+    "group": "body",
+    "query": "What happens to a request that needs more than two days of work?",
+    "gold": [
+      {
+        "file": "ontano/Support Rotation.md",
+        "snippet": "converted into a backlog item"
+      }
+    ]
+  },
+  {
+    "id": "b03",
+    "group": "body",
+    "query": "Is returns tracking done?",
+    "gold": [
+      {
+        "file": "ontano/planning.md",
+        "snippet": "Tracciamento resi"
+      }
+    ]
+  },
+  {
+    "id": "b04",
+    "group": "body",
+    "query": "Which partitioning columns does parcel_v1_history use?",
+    "gold": [
+      {
+        "file": "ontano/Snapshot tables.md",
+        "snippet": "[snapshot, depot]"
+      }
+    ]
+  },
+  {
+    "id": "b05",
+    "group": "body",
+    "query": "Quante righe hanno i turni degli autisti?",
+    "gold": [
+      {
+        "file": "ontano/tickets/OPS 2318.md",
+        "snippet": "circa 5k righe"
+      }
+    ]
+  },
+  {
+    "id": "b06",
+    "group": "body",
+    "query": "Chi è responsabile delle API di composizione?",
+    "gold": [
+      {
+        "file": "larice/05-04-2022.md",
+        "snippet": "Nessuno, per ora"
+      }
+    ]
+  },
+  {
+    "id": "b07",
+    "group": "body",
+    "query": "Cos'è un'API provvisoria?",
+    "gold": [
+      {
+        "file": "larice/05-04-2022.md",
+        "snippet": "Scritta da un team prodotto da solo"
+      }
+    ]
+  },
+  {
+    "id": "b08",
+    "group": "body",
+    "query": "Quali dati in esercizio pubblica la scheda API?",
+    "gold": [
+      {
+        "file": "larice/19-04-2022.md",
+        "snippet": "ultima verifica di salute riuscita"
+      }
+    ]
+  },
+  {
+    "id": "b09",
+    "group": "body",
+    "query": "Posso promettere il 99,99% se il database gestito su cui giro garantisce il 99,9%?",
+    "gold": [
+      {
+        "file": "larice/12-04-2022.md",
+        "snippet": "99,9%"
+      }
+    ]
+  },
+  {
+    "id": "b10",
+    "group": "body",
+    "query": "What is the response time for a P1 ticket?",
+    "gold": [
+      {
+        "file": "larice/Ticket triage.md",
+        "snippet": "risposta entro 2 ore"
+      }
+    ]
+  },
+  {
+    "id": "b11",
+    "group": "body",
+    "query": "What value does a cleared column return?",
+    "gold": [
+      {
+        "file": "ontano/hld/data masking/Data Masking.md",
+        "snippet": "replaced with null"
+      }
+    ]
+  },
+  {
+    "id": "b12",
+    "group": "body",
+    "query": "How is live data masked on the event bus?",
+    "gold": [
+      {
+        "file": "ontano/hld/data masking/Data Masking.md",
+        "snippet": "broker plugin"
+      }
+    ]
+  },
+  {
+    "id": "b13",
+    "group": "body",
+    "query": "Chi deve approvare le migrazioni del database?",
+    "gold": [
+      {
+        "file": "workshop/draft.md",
+        "snippet": "gestito un rollback"
+      }
+    ]
+  },
+  {
+    "id": "b14",
+    "group": "body",
+    "query": "How do we measure uptake of the service skeletons?",
+    "gold": [
+      {
+        "file": "roadmap.md",
+        "snippet": "counting services"
+      }
+    ]
+  },
+  {
+    "id": "d01",
+    "group": "distractor",
+    "query": "How does the query engine apply masking to cold data?",
+    "gold": [
+      {
+        "file": "ontano/hld/data masking/Data Masking.md",
+        "snippet": "masking view generated from the policy"
+      },
+      {
+        "file": "larice/Data Masking.md",
+        "snippet": "viste generate dal catalogo"
+      }
+    ]
+  },
+  {
+    "id": "d02",
+    "group": "distractor",
+    "query": "How are accounts used by scheduled jobs identified?",
+    "gold": [
+      {
+        "file": "ontano/hld/data masking/Data Masking.md",
+        "snippet": "mapped to the owning team"
+      }
+    ]
+  },
+  {
+    "id": "d03",
+    "group": "distractor",
+    "query": "Which columns are masked in the data warehouse?",
+    "gold": [
+      {
+        "file": "larice/Data Masking.md",
+        "snippet": "email, telefono"
+      }
+    ]
+  },
+  {
+    "id": "d04",
+    "group": "distractor",
+    "query": "Which Spark read path still needs a dedicated test suite?",
+    "gold": [
+      {
+        "file": "ontano/hld/data masking/Data Masking.md",
+        "snippet": "dedicated test suite"
+      }
+    ]
+  },
+  {
+    "id": "d05",
+    "group": "distractor",
+    "query": "Cosa si dichiara al rilascio nella scheda API?",
+    "gold": [
+      {
+        "file": "larice/19-04-2022.md",
+        "snippet": "classificazione dei campi sensibili"
+      }
+    ]
+  },
+  {
+    "id": "d06",
+    "group": "distractor",
+    "query": "Chi fa lo smistamento dei ticket ogni mattina?",
+    "gold": [
+      {
+        "file": "larice/Ticket triage.md",
+        "snippet": "fa lo smistamento"
+      }
+    ]
+  },
+  {
+    "id": "s01",
+    "group": "scoped",
+    "query": "Do engineers on the support rotation attend sprint planning?",
+    "gold": [
+      {
+        "file": "ontano/Support Rotation.md",
+        "snippet": "skip sprint planning"
+      }
+    ],
+    "scope": "ontano/"
+  },
+  {
+    "id": "s02",
+    "group": "scoped",
+    "query": "How long should data masking audit logs be retained?",
+    "gold": [
+      {
+        "file": "ontano/hld/data masking/Data Masking.md",
+        "snippet": "audit log retention"
+      }
+    ],
+    "scope": "ontano/hld/"
+  },
+  {
+    "id": "s03",
+    "group": "scoped",
+    "query": "How does the query engine apply masking to cold data?",
+    "gold": [
+      {
+        "file": "larice/Data Masking.md",
+        "snippet": "viste generate dal catalogo"
+      }
+    ],
+    "scope": "larice/"
+  },
+  {
+    "id": "s04",
+    "group": "scoped",
+    "query": "How often are the water meters read?",
+    "gold": [
+      {
+        "file": "faggio/Sensors/Water meters.md",
+        "snippet": "15 minuti"
+      }
+    ],
+    "scope": "faggio/"
+  },
+  {
+    "id": "s05",
+    "group": "scoped",
+    "query": "What is the response time for a P1 ticket?",
+    "gold": [
+      {
+        "file": "larice/Ticket triage.md",
+        "snippet": "risposta entro 2 ore"
+      }
+    ],
+    "scope": "larice/"
+  },
+  {
+    "id": "s06",
+    "group": "scoped",
+    "query": "What did we answer in ticket OPS 2318 about how often materialized views should refresh?",
+    "gold": [
+      {
+        "file": "ontano/tickets/OPS 2318.md",
+        "snippet": "ogni quarto d'ora"
+      }
+    ],
+    "scope": "ontano/tickets/"
+  }
+]

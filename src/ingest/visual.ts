@@ -434,12 +434,10 @@ export async function prepareVisualPdfChunks(
     omittedImageCount += detected.omittedImageCount
 
     const ordered = buildOrderedVisualDocument(pages, processed)
-    const { chunks, embeddings } = await buildChunksAndEmbeddings(
-      ordered.text,
-      chunker,
-      embedder,
-      ordered.atomicRanges
-    )
+    const { chunks, embeddings } = await buildChunksAndEmbeddings(ordered.text, chunker, embedder, {
+      atomicRanges: ordered.atomicRanges,
+      title,
+    })
     const collected = options.images
       ? collectAttachments(ordered.regions)
       : { attachments: [], omittedImageCount: 0 }

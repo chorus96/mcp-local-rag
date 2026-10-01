@@ -330,7 +330,8 @@ describe('CLI ingest', () => {
     const { error } = await captureStderr(() => runIngest([filePath]))
 
     expect(error).toBeUndefined()
-    expect(mocks.chunkText).toHaveBeenCalledWith(parsedContent, expect.anything(), atomicRanges)
+    // No title prefix unless EMBED_TITLE_PREFIX is on.
+    expect(mocks.chunkText).toHaveBeenCalledWith(parsedContent, expect.anything(), atomicRanges, '')
   })
 
   // --------------------------------------------

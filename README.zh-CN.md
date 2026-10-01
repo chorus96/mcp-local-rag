@@ -358,6 +358,7 @@ MCP 服务器读取环境变量。CLI 支持相同的变量和下表所列的命
 | `MODEL_NAME` | `--model-name` | `Xenova/all-MiniLM-L6-v2` | Hugging Face 嵌入模型 |
 | `MAX_FILE_SIZE` | `--max-file-size` | `104857600`（100 MB） | 最大文件大小（字节） |
 | `CHUNK_MIN_LENGTH` | `--chunk-min-length` | `50` | 普通文本块的最小字符数（1–10000）；为适配模型词元上限而切分出的片段可以更短 |
+| `EMBED_TITLE_PREFIX` | N/A | `false` | 生成嵌入时在每个文本块前加上含文档标题的 `Title:` 行；返回的文本块内容不变。修改后需重新导入 |
 | `RAG_DEVICE` | 不适用 | `cpu` | ONNX Runtime 执行设备 |
 | `RAG_DTYPE` | 不适用 | `fp32` | 传给所选模型的嵌入数据类型 |
 

@@ -63,6 +63,7 @@
     "check:deps": "dpdm --no-tree --no-warning --exit-code circular:1 -T --tsconfig ./tsconfig.json --exclude \"(node_modules|__tests__|\\.test\\.ts$|\\.spec\\.ts$)\" \"src/**/*.ts\"",
     "check:all": "pnpm run check && pnpm run lint && pnpm run format:check && pnpm run check:unused && pnpm run check:deps && pnpm run build && pnpm run type-check:test && pnpm run test",
     "test:safe": "pnpm test",
+    "bench:title-prefix": "tsx bench/title-prefix/run.ts",
     "prepare": "husky"
   },
   "dependencies": {

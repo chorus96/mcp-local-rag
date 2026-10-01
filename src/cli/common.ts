@@ -11,7 +11,13 @@ import {
 import { getCauseChain } from '../utils/errors.js'
 import { checkSensitivePath } from '../utils/sensitive-path.js'
 import { VectorStore } from '../vectordb/index.js'
-import { type ResolvedGlobalConfig, resolveDevice, resolveDtype, validatePath } from './options.js'
+import {
+  parseBooleanEnv,
+  type ResolvedGlobalConfig,
+  resolveDevice,
+  resolveDtype,
+  validatePath,
+} from './options.js'
 
 /**
  * Render a caught value for a CLI failure: every `.cause` link with its stack,
@@ -71,6 +77,13 @@ export function createEmbedder(config: ResolvedGlobalConfig): Embedder {
   const dtype = resolveDtype(process.env['RAG_DTYPE'])
   if (dtype !== undefined) {
     embedderConfig.dtype = dtype
+  }
+  const titlePrefix = parseBooleanEnv('EMBED_TITLE_PREFIX', process.env['EMBED_TITLE_PREFIX'])
+  if (titlePrefix.warning !== undefined) {
+    console.error(titlePrefix.warning)
+  }
+  if (titlePrefix.value) {
+    embedderConfig.titlePrefix = true
   }
   return new Embedder(embedderConfig)
 }

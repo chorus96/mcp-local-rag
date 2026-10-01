@@ -735,6 +735,22 @@ describe('Measured token containment', () => {
     expectOrderedSpans(chunks, text)
   })
 
+  it('budgets for the text prefix the caller will embed each chunk behind', async () => {
+    const text = 'abcdefghij'.repeat(6)
+    const prefix = 'Title: T\n\n'
+    const { embedder } = measuredEmbedder(30)
+
+    const chunks = await containmentChunker().chunkText(text, embedder, [], prefix)
+
+    expect(chunks.map((chunk) => chunk.text).join('')).toBe(text)
+    expect(chunks.every((chunk) => !chunk.text.startsWith(prefix))).toBe(true)
+    expectMeasuredWithinCap(
+      chunks.map((chunk) => ({ ...chunk, text: prefix + chunk.text })),
+      30
+    )
+    expectOrderedSpans(chunks, text)
+  })
+
   it('produces today’s chunks when the embedder resolves no token limit', async () => {
     const text = 'abcdefghij'.repeat(12)
     const { embedder, log } = measuredEmbedder(null)

@@ -13,6 +13,7 @@ import { resolve } from 'node:path'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { testModelCacheDir } from '../../__tests__/test-device.js'
 import { privateMembers } from '../../__tests__/test-doubles.js'
+import { parseBooleanEnv } from '../../cli/options.js'
 import type { DocumentParser } from '../../parser/index.js'
 import {
   parseRerankCmd,
@@ -62,6 +63,33 @@ describe('STORE_IMAGES configuration', () => {
     expect(invalid.storeImages).toBe(false)
     expect(invalid.configWarnings).toContain(
       'Invalid STORE_IMAGES value: "invalid". Expected one of 1, true, yes, on, 0, false, no, or off. Using false.'
+    )
+  })
+})
+
+describe('EMBED_TITLE_PREFIX configuration', () => {
+  it.each([
+    [undefined, false],
+    ['', false],
+    ['on', true],
+    [' TRUE ', true],
+    ['0', false],
+  ] as const)('parses %j as %s', (raw, expected) => {
+    expect(parseBooleanEnv('EMBED_TITLE_PREFIX', raw)).toEqual({ value: expected })
+  })
+
+  it('threads the parsed value and warning through resolveServerConfig', async () => {
+    const cwd = resolve('./tmp/test-lancedb-config-shape')
+    const unset = await resolveServerConfig({ BASE_DIR: cwd }, cwd)
+    expect(unset.titlePrefix).toBe(false)
+
+    const enabled = await resolveServerConfig({ BASE_DIR: cwd, EMBED_TITLE_PREFIX: '1' }, cwd)
+    expect(enabled.titlePrefix).toBe(true)
+
+    const invalid = await resolveServerConfig({ BASE_DIR: cwd, EMBED_TITLE_PREFIX: 'maybe' }, cwd)
+    expect(invalid.titlePrefix).toBe(false)
+    expect(invalid.configWarnings).toContain(
+      'Invalid EMBED_TITLE_PREFIX value: "maybe". Expected one of 1, true, yes, on, 0, false, no, or off. Using false.'
     )
   })
 })

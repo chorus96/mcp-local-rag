@@ -340,6 +340,9 @@ export class RAGServer {
     if (config.dtype !== undefined) {
       embedderConfig.dtype = config.dtype
     }
+    if (config.titlePrefix) {
+      embedderConfig.titlePrefix = true
+    }
     this.embedder = new Embedder(embedderConfig)
     this.chunker = new SemanticChunker(
       config.chunkMinLength !== undefined ? { minChunkLength: config.chunkMinLength } : {}
@@ -642,7 +645,14 @@ export class RAGServer {
     const meta = await loadMetaJson(filePath)
     const title = meta?.title ?? null
     console.error(`Read raw-data file: ${filePath} (${text.length} characters)`)
-    const { chunks, embeddings } = await buildChunksAndEmbeddings(text, this.chunker, this.embedder)
+    const { chunks, embeddings } = await buildChunksAndEmbeddings(
+      text,
+      this.chunker,
+      this.embedder,
+      {
+        title,
+      }
+    )
     return {
       title,
       omittedImageCount: 0,
