@@ -425,7 +425,7 @@ export async function prepareVisualPdfChunks(
 ): Promise<PrepareVisualPdfChunksResult> {
   const { parser, chunker, embedder } = collaborators
   const captionerConfig = options.captioner
-  const { doc, title, pages } = await parser.parsePdfPages(filePath, embedder)
+  const { doc, title, embeddingTitle, pages } = await parser.parsePdfPages(filePath, embedder)
   try {
     let omittedImageCount = 0
 
@@ -436,7 +436,7 @@ export async function prepareVisualPdfChunks(
     const ordered = buildOrderedVisualDocument(pages, processed)
     const { chunks, embeddings } = await buildChunksAndEmbeddings(ordered.text, chunker, embedder, {
       atomicRanges: ordered.atomicRanges,
-      title,
+      title: embeddingTitle,
     })
     const collected = options.images
       ? collectAttachments(ordered.regions)

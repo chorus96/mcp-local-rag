@@ -144,7 +144,7 @@ export async function buildChunksFromParseResult(
 ): Promise<BuildChunksFromParseResultResult> {
   const computed = await buildChunksAndEmbeddings(result.content, chunker, embedder, {
     atomicRanges: result.atomicRanges,
-    title: result.title,
+    title: result.embeddingTitle ?? result.title,
   })
   const visualAttachments = new Map<number, VisualAttachment[]>()
   if (!result.imageAnchors?.length || computed.chunks.length === 0) {

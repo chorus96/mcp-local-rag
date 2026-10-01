@@ -448,7 +448,7 @@ variables and flags; image storage on CLI ingestion and sync is enabled only wit
 | `MODEL_NAME` | `--model-name` | `Xenova/all-MiniLM-L6-v2` | Hugging Face embedding model |
 | `MAX_FILE_SIZE` | `--max-file-size` | `104857600` (100MB) | Maximum file size in bytes |
 | `CHUNK_MIN_LENGTH` | `--chunk-min-length` | `50` | Minimum length in characters (1–10000) for ordinary chunks; a fragment of content split to fit the model's token limit can be shorter |
-| `EMBED_TITLE_PREFIX` | N/A | `false` | Embed each chunk behind a `Title:` line with its document title. Returned chunk text stays unchanged. Re-ingest after changing it |
+| `EMBED_TITLE_PREFIX` | N/A | `false` | Embed each chunk together with its document title; can help when passages don't restate the topic the title names |
 | `STORE_IMAGES` | N/A | `false` | MCP server only: store supported PDF/DOCX images and return them with matched chunks. CLI uses `--images`. |
 | `RAG_DEVICE` | N/A | `cpu` | ONNX Runtime execution device |
 | `RAG_DTYPE` | N/A | `fp32` | Embedding dtype passed to the selected model |

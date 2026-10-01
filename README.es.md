@@ -271,7 +271,7 @@ npx mcp-local-rag --db-path ./my-db query "autenticación"
 
 Ejecuta `npx mcp-local-rag --help` para ver la referencia completa de comandos.
 
-La CLI no lee la configuración del cliente MCP. Configura las mismas variables de entorno u opciones si ambas interfaces deben compartir un índice. En particular, `MODEL_NAME` y la opción `--model-name` de la CLI deben coincidir cuando usan la misma base de datos.
+La CLI no lee la configuración del cliente MCP. Configura las mismas variables de entorno u opciones si ambas interfaces deben compartir un índice. En particular, `MODEL_NAME` y la opción `--model-name` de la CLI deben coincidir cuando usan la misma base de datos, al igual que `EMBED_TITLE_PREFIX`.
 
 `query` escribe sus resultados en stdout como JSON, con la mejor coincidencia primero, de modo que puedes canalizarlos hacia otra herramienta. La definición de cada campo está en [`docs/schema/query-output.schema.json`](docs/schema/query-output.schema.json).
 
@@ -358,7 +358,7 @@ El servidor MCP lee variables de entorno. La CLI acepta las mismas variables y l
 | `MODEL_NAME` | `--model-name` | `Xenova/all-MiniLM-L6-v2` | Modelo de embeddings de Hugging Face |
 | `MAX_FILE_SIZE` | `--max-file-size` | `104857600` (100 MB) | Tamaño máximo del archivo en bytes |
 | `CHUNK_MIN_LENGTH` | `--chunk-min-length` | `50` | Longitud mínima de un segmento normal en caracteres (1–10000); un fragmento resultante de dividir contenido para respetar el límite de tokens del modelo puede ser más corto |
-| `EMBED_TITLE_PREFIX` | N/A | `false` | Genera el embedding de cada segmento precedido de una línea `Title:` con el título del documento. El texto devuelto no cambia. Vuelva a ingerir los documentos tras cambiarlo |
+| `EMBED_TITLE_PREFIX` | No disponible | `false` | Genera el embedding de cada segmento junto con el título de su documento; puede ayudar cuando un segmento no repite el tema que indica el título |
 | `RAG_DEVICE` | No disponible | `cpu` | Dispositivo de ejecución de ONNX Runtime |
 | `RAG_DTYPE` | No disponible | `fp32` | Tipo de datos de los embeddings que recibe el modelo seleccionado |
 
@@ -394,7 +394,7 @@ Configura `MODEL_NAME` o pasa `--model-name` para elegir un modelo de embeddings
 
 mcp-local-rag genera embeddings mediante mean pooling y normalización L2. Al elegir un modelo, comprueba si estos ajustes coinciden con su configuración de inferencia recomendada, ya que el método de pooling puede influir en la calidad de la búsqueda.
 
-Cambiar `MODEL_NAME`, `RAG_DEVICE` o `RAG_DTYPE` puede hacer que los vectores existentes sean incompatibles. Usa un `DB_PATH` nuevo o elimina el índice existente y vuelve a incorporar los documentos después de cambiar la configuración de embeddings.
+Cambiar `MODEL_NAME`, `RAG_DEVICE`, `RAG_DTYPE` o `EMBED_TITLE_PREFIX` puede hacer que los vectores existentes sean incompatibles. Usa un `DB_PATH` nuevo o elimina el índice existente y vuelve a incorporar los documentos después de cambiar la configuración de embeddings.
 
 Un ejemplo de modelo disponible para documentos en español es `jinaai/jina-embeddings-v2-base-es`.
 

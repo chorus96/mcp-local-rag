@@ -70,6 +70,19 @@ describe('buildChunksAndEmbeddings title prefix', () => {
     expect(embedBatch).toHaveBeenCalledWith(['Body.'])
   })
 
+  it('embeds behind the parser embedding title instead of the display title', async () => {
+    const chunkText = vi.fn().mockResolvedValue(chunks())
+    const embedBatch = vi.fn().mockResolvedValue([[1, 0]])
+
+    await buildChunksFromParseResult(
+      { content: 'Body.', title: 'Body text from page 1', embeddingTitle: 'quarterly report' },
+      asDouble<SemanticChunker>({ chunkText }),
+      { embedBatch, titlePrefix: true }
+    )
+
+    expect(embedBatch).toHaveBeenCalledWith(['Title: quarterly report\n\nBody.'])
+  })
+
   it('drops a title that would take more than half the token window', async () => {
     const { embedBatch } = await run(true, {
       getTokenLimit: async () => 10,

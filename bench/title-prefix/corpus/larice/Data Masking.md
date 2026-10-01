@@ -1,1 +1,0 @@
-Nel data warehouse il mascheramento lo applica il motore SQL con viste generate dal catalogo. Per ora solo dati di contatto (email, telefono, indirizzo). Da valutare se estenderlo allo storico ordini.

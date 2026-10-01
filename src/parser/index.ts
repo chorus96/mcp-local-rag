@@ -37,11 +37,17 @@ export const SUPPORTED_EXTENSIONS = new Set(['.pdf', '.docx', '.txt', '.md'])
 
 /**
  * Result from parsing a document, containing both content and extracted title.
- * Title is display-only metadata (NOT used for search scoring).
+ * Title is display metadata; it reaches search only through the opt-in
+ * embedding title prefix.
  */
 export interface ParseResult {
   content: string
   title: string
+  /**
+   * Title for the embedding prefix; `title` is used when absent. PDFs set it
+   * so a display title taken from page-1 body text embeds as the file name.
+   */
+  embeddingTitle?: string
   atomicRanges?: readonly AtomicTextRange[]
   imageAnchors?: readonly ParsedImageAnchor[]
 }
@@ -63,12 +69,18 @@ interface PdfTitleHints {
   page1FontHint: { text: string; fontSize: number } | undefined
 }
 
+/** Display title, and the title to embed behind (the same order minus page-1 body text). */
+interface ResolvedPdfTitle {
+  title: string
+  embeddingTitle: string
+}
+
 async function resolvePdfTitle(
   filePath: string,
   pages: readonly { text: string }[],
   hints: PdfTitleHints,
   embedder: EmbedderInterface
-): Promise<string> {
+): Promise<ResolvedPdfTitle> {
   const { metadataTitle, page1FontHint } = hints
   const fileName = basename(filePath)
   let firstPageChunkText: string | undefined
@@ -84,7 +96,10 @@ async function resolvePdfTitle(
     }
     console.error(`Title extraction failed, falling back to filename: ${titleError}`)
   }
-  return extractPdfTitle(metadataTitle, firstPageChunkText, fileName, page1FontHint).title
+  return {
+    title: extractPdfTitle(metadataTitle, firstPageChunkText, fileName, page1FontHint).title,
+    embeddingTitle: extractPdfTitle(metadataTitle, undefined, fileName, page1FontHint).title,
+  }
 }
 
 /**
@@ -307,7 +322,7 @@ export class DocumentParser {
         .filter((t) => t.length > 0)
         .join('\n\n')
 
-      const title = await resolvePdfTitle(
+      const { title, embeddingTitle } = await resolvePdfTitle(
         filePath,
         pages,
         { metadataTitle, page1FontHint },
@@ -316,7 +331,7 @@ export class DocumentParser {
 
       console.error(`Parsed PDF: ${filePath} (${text.length} characters, ${pages.length} pages)`)
 
-      return { content: text, title }
+      return { content: text, title, embeddingTitle }
     } catch (error) {
       // A foreign domain error (an `EmbeddingError` raised while the parser
       // used the embedder) keeps its identity rather than being relabelled a
@@ -347,6 +362,7 @@ export class DocumentParser {
   ): Promise<{
     doc: MupdfDocument
     title: string
+    embeddingTitle: string
     pages: Array<{
       pageNum: number
       text: string
@@ -378,7 +394,7 @@ export class DocumentParser {
         textFragments: page.textFragments,
         stextJson: page.stextJson,
       }))
-      const title = await resolvePdfTitle(
+      const { title, embeddingTitle } = await resolvePdfTitle(
         filePath,
         helperPages,
         { metadataTitle, page1FontHint },
@@ -389,7 +405,7 @@ export class DocumentParser {
         `Parsed PDF pages: ${filePath} (${pages.length} pages; caller owns doc disposal)`
       )
 
-      return { doc, title, pages }
+      return { doc, title, embeddingTitle, pages }
     } catch (error) {
       // `doc` is undefined when `openDocument` itself threw — nothing to free.
       // When it is defined, dispose before re-throwing (on BOTH the foreign and

@@ -310,6 +310,6 @@ describe('parser PDF foreign-error reclassification (AC-002 / AC-003)', () => {
     // The non-AppError title-local failure is swallowed; the filename-derived
     // title is used (mockExtractPdfTitle returns the basename without .pdf).
     expect(result.title).toBe('test')
-    expect(mockExtractPdfTitle).toHaveBeenCalledTimes(1)
+    expect(result.embeddingTitle).toBe('test')
   })
 })
