@@ -701,6 +701,30 @@ describe('DocumentParser', () => {
       expect(result.title).toBe('test')
     })
 
+    it('embeds behind the file name when the display title is page-1 body text', async () => {
+      const { extractPdfTitle } =
+        await vi.importActual<typeof import('../title-extractor.js')>('../title-extractor.js')
+      mockExtractPdfTitle.mockImplementation(extractPdfTitle)
+      const filePath = join(testDir, 'quarterly_report.pdf')
+      await writeFile(filePath, 'dummy-pdf-content')
+      setupMupdfMock([
+        {
+          bounds: [0, 0, 612, 792],
+          blocks: [
+            {
+              type: 'text',
+              lines: [{ text: 'Revenue grew in every region.', x: 72, y: 100, font: { size: 12 } }],
+            },
+          ],
+        },
+      ])
+
+      const result = await parser.parsePdf(filePath, mockEmbedder)
+
+      expect(result.title).toBe('Revenue grew in every region.')
+      expect(result.embeddingTitle).toBe('quarterly report')
+    })
+
     it('should produce empty content for a page with no blocks', async () => {
       const filePath = join(testDir, 'test.pdf')
       setupMupdfMock([

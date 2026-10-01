@@ -271,7 +271,7 @@ npx mcp-local-rag --db-path ./my-db query "身份验证"
 
 运行 `npx mcp-local-rag --help` 可查看完整命令说明。
 
-CLI 不读取 MCP 客户端配置。如果两个接口需要共用索引，请设置相同的环境变量或命令行参数。特别是共享同一数据库时，`MODEL_NAME` 必须与 CLI 的 `--model-name` 一致。
+CLI 不读取 MCP 客户端配置。如果两个接口需要共用索引，请设置相同的环境变量或命令行参数。特别是共享同一数据库时，`MODEL_NAME` 必须与 CLI 的 `--model-name` 一致，`EMBED_TITLE_PREFIX` 也必须相同。
 
 `query` 会以 JSON 格式将结果写入 stdout，最匹配的结果排在最前，因此可以通过管道传给其他工具。各字段的定义见 [`docs/schema/query-output.schema.json`](docs/schema/query-output.schema.json)。
 
@@ -358,7 +358,7 @@ MCP 服务器读取环境变量。CLI 支持相同的变量和下表所列的命
 | `MODEL_NAME` | `--model-name` | `Xenova/all-MiniLM-L6-v2` | Hugging Face 嵌入模型 |
 | `MAX_FILE_SIZE` | `--max-file-size` | `104857600`（100 MB） | 最大文件大小（字节） |
 | `CHUNK_MIN_LENGTH` | `--chunk-min-length` | `50` | 普通文本块的最小字符数（1–10000）；为适配模型词元上限而切分出的片段可以更短 |
-| `EMBED_TITLE_PREFIX` | N/A | `false` | 生成嵌入时在每个文本块前加上含文档标题的 `Title:` 行；返回的文本块内容不变。修改后需重新导入 |
+| `EMBED_TITLE_PREFIX` | 不适用 | `false` | 生成每个文本块的嵌入时一并加入文档标题；文本块本身没有提到标题所示主题时可能有帮助 |
 | `RAG_DEVICE` | 不适用 | `cpu` | ONNX Runtime 执行设备 |
 | `RAG_DTYPE` | 不适用 | `fp32` | 传给所选模型的嵌入数据类型 |
 
@@ -394,7 +394,7 @@ BASE_DIRS='["/Users/me/work","/Users/me/specs"]' npx mcp-local-rag list
 
 mcp-local-rag 使用平均池化和 L2 归一化生成嵌入。选择模型时，请确认这些设置是否符合该模型建议的推理方式，因为池化方式可能影响检索质量。
 
-更改 `MODEL_NAME`、`RAG_DEVICE` 或 `RAG_DTYPE` 可能导致现有向量不兼容。更改嵌入配置后，请使用新的 `DB_PATH`，或者删除现有索引并重新导入。
+更改 `MODEL_NAME`、`RAG_DEVICE`、`RAG_DTYPE` 或 `EMBED_TITLE_PREFIX` 可能导致现有向量不兼容。更改嵌入配置后，请使用新的 `DB_PATH`，或者删除现有索引并重新导入。
 
 适用于中文文档的模型示例：`Xenova/bge-small-zh-v1.5`。
 

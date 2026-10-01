@@ -1,4 +1,0 @@
-- fare il cambio gomme
-- disdire abbonamento palestra
-- portare le scarpe a risuolare
-- comprare batterie per il telecomando

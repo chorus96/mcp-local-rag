@@ -63,6 +63,7 @@ const mocks = vi.hoisted(() => {
 
     // ---------------- Embedder + VectorStore (via cli/common.js) ----------------
     embedBatch: vi.fn(),
+    titlePrefix: false,
     initialize: vi.fn(),
     deleteChunks: vi.fn(),
     insertChunks: vi.fn(),
@@ -115,6 +116,7 @@ const chunkerFactory = () => ({
 const cliCommonFactory = () => ({
   createEmbedder: vi.fn().mockImplementation(() => ({
     embedBatch: mocks.embedBatch,
+    titlePrefix: mocks.titlePrefix,
     dispose: vi.fn(),
   })),
   createVectorStore: vi.fn().mockImplementation(() => ({
@@ -392,6 +394,7 @@ describe('VLM PDF Enrichment - Visual Mode', () => {
     captionerSpy.throwOn = null
     captionerSpy.throwAll = false
     captionerSpy.candidatePages = new Set<number>([2])
+    mocks.titlePrefix = false
 
     // Re-arm the default fixture shape after vi.clearAllMocks() wiped it.
     mocks.parsePdfPages.mockResolvedValue(buildThreePageParseResult())
@@ -418,6 +421,26 @@ describe('VLM PDF Enrichment - Visual Mode', () => {
   })
 
   const NO_FLAGS: string[] = []
+
+  it('embeds visual chunks behind the parser embedding title, not the display title', async () => {
+    mocks.titlePrefix = true
+    mocks.parsePdfPages.mockResolvedValue({
+      ...buildThreePageParseResult(),
+      embeddingTitle: 'scan',
+    })
+    mocks.stat.mockResolvedValue(mockFileStat())
+
+    const { inserted, error } = await captureRun(() =>
+      runIngest(['--visual', resolve('/tmp/test/scan.pdf')])
+    )
+
+    expect(error).toBeUndefined()
+    const embedded: string[] = mocks.embedBatch.mock.calls.flatMap(([texts]) => texts)
+    expect(embedded.length).toBeGreaterThan(0)
+    expect(embedded.every((text) => text.startsWith('Title: scan\n\n'))).toBe(true)
+    expect(inserted.every((row) => row.fileTitle === 'Plain PDF')).toBe(true)
+    expect(inserted.every((row) => !row.text.startsWith('Title:'))).toBe(true)
+  })
 
   it.each([
     { flags: NO_FLAGS, captioned: false, storedImages: false },
