@@ -11,6 +11,9 @@ import { isInteger, isRecord } from '../utils/type-guards.js'
 /** Multiplier for candidate count in hybrid search (to allow reranking) */
 export const HYBRID_SEARCH_CANDIDATE_MULTIPLIER = 2
 
+/** Minimum semantic pool for keyword reranking without distance-gap grouping. */
+export const HYBRID_SEARCH_MIN_CANDIDATES = 200
+
 /** FTS index name (bump version when changing tokenizer settings) */
 export const FTS_INDEX_NAME = 'fts_index_v2'
 

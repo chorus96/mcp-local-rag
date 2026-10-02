@@ -467,6 +467,59 @@ describe('VectorStore', () => {
   })
 
   describe('Search mode behavior', () => {
+    it.each([10, 100])(
+      'can promote keyword evidence while preserving a result limit of %i',
+      async (limit) => {
+        await withTempDb('keyword-candidate-depth', async (store, dbPath) => {
+          const atDistance = (distance: number): number[] => {
+            const vector = new Array<number>(384).fill(0)
+            vector[0] = 1 - distance
+            vector[1] = Math.sqrt(1 - (1 - distance) ** 2)
+            return vector
+          }
+          const queryVector = atDistance(0)
+          const nearby = Array.from({ length: 150 }, (_, index) =>
+            createTestChunk(
+              'Orchard harvest and apple storage instructions',
+              `/docs/orchard-${index}.txt`,
+              0,
+              atDistance(0.2 + index * 0.0001)
+            )
+          )
+          const evidence = createTestChunk(
+            'ZXQVKJ handling instructions',
+            '/docs/evidence.txt',
+            0,
+            atDistance(0.3)
+          )
+          await store.insertChunks([...nearby, evidence])
+
+          const vectorOnly = await store.search(queryVector, { limit })
+          expect(vectorOnly.some((row) => row.id === evidence.id)).toBe(false)
+
+          const boosted = await store.search(queryVector, { queryText: 'ZXQVKJ', limit })
+          expect(boosted).toHaveLength(limit)
+          expect(boosted[0]?.id).toBe(evidence.id)
+          expect(boosted[0]?.score).toBeCloseTo(0.3 / 1.6)
+
+          const scoped = await store.search(queryVector, {
+            queryText: 'ZXQVKJ',
+            limit: 10,
+            scope: ['/docs/orchard-0.txt'],
+          })
+          expect(scoped.map((row) => row.filePath)).toEqual(['/docs/orchard-0.txt'])
+
+          const grouped = new VectorStore({ dbPath, tableName: 'chunks', grouping: 'related' })
+          await grouped.initialize()
+          const groupedResults = await grouped.search(queryVector, {
+            queryText: 'ZXQVKJ',
+            limit: 10,
+          })
+          expect(groupedResults.some((row) => row.id === evidence.id)).toBe(false)
+        })
+      }
+    )
+
     /**
      * doc1 matches the keyword but is far from the query vector; doc2 is the
      * reverse. So doc2 wins at hybridWeight=0 and doc1 wins at 0.6 and 1.

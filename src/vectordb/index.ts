@@ -13,6 +13,7 @@ import {
   FTS_CLEANUP_THRESHOLD_MS,
   FTS_INDEX_NAME,
   HYBRID_SEARCH_CANDIDATE_MULTIPLIER,
+  HYBRID_SEARCH_MIN_CANDIDATES,
   normalizeVisualAttachments,
   parseHydratedVisualAttachments,
   type SearchOptions,
@@ -382,6 +383,21 @@ export class VectorStore {
     }
   }
 
+  private getCandidateLimit(limit: number, queryText: string | undefined): number {
+    const candidateLimit = limit * HYBRID_SEARCH_CANDIDATE_MULTIPLIER
+    const hybridWeight = this.config.hybridWeight ?? DEFAULT_HYBRID_WEIGHT
+    // Grouping depends on gaps across the fetched pool; keep its existing window.
+    if (
+      this.ftsEnabled &&
+      queryText?.trim() &&
+      hybridWeight > 0 &&
+      this.config.grouping === undefined
+    ) {
+      return Math.max(candidateLimit, HYBRID_SEARCH_MIN_CANDIDATES)
+    }
+    return candidateLimit
+  }
+
   async search(queryVector: number[], options: SearchOptions = {}): Promise<SearchResult[]> {
     const { queryText, limit = 10, scope } = options
     await this.openExistingTable()
@@ -398,7 +414,7 @@ export class VectorStore {
 
     try {
       // Step 1: Semantic (vector) search - always the primary search
-      const candidateLimit = limit * HYBRID_SEARCH_CANDIDATE_MULTIPLIER
+      const candidateLimit = this.getCandidateLimit(limit, queryText)
       let query = this.table
         .vectorSearch(queryVector)
         .distanceType('dot')
