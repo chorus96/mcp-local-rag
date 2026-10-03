@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises'
 
-import type { SemanticChunker, TextChunk } from '../chunker/index.js'
+import type { SemanticChunker } from '../chunker/index.js'
 import type { EmbedderInterface } from '../chunker/semantic-chunker.js'
 import type { DocumentParser } from '../parser/index.js'
 import type { QualityProfile } from '../utils/visual-profile.js'
@@ -26,7 +26,7 @@ export interface PrepareFileForIngestOptions {
 
 export interface PreparedFileIngest {
   filePath: string
-  chunks: TextChunk[]
+  chunks: Awaited<ReturnType<typeof buildChunksFromParseResult>>['chunks']
   embeddings: number[][]
   textLength: number
   title: string | null

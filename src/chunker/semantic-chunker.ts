@@ -42,6 +42,8 @@ export interface EmbedderInterface {
   countTokens?(texts: string[]): Promise<number[]>
   /** Whether ingestion embeds chunks behind their document title. */
   readonly titlePrefix?: boolean
+  /** Whether ingestion adds section paths to the final embedding input. */
+  readonly headingPrefix?: boolean
 }
 
 // ============================================

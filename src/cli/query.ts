@@ -2,6 +2,7 @@
 
 import { MAX_QUERY_LIMIT, MIN_QUERY_LIMIT } from '../utils/limits.js'
 import { extractSourceFromPath, isManagedRawDataPath } from '../utils/raw-data-utils.js'
+import type { SourceContext } from '../utils/source-context.js'
 import { createEmbedder, createVectorStore, formatCliError } from './common.js'
 import type { GlobalOptions } from './options.js'
 import { requireFlagValue, resolveGlobalConfig } from './options.js'
@@ -22,6 +23,7 @@ interface ParsedArgs {
 }
 
 interface QueryResultOutput {
+  sourceContext?: SourceContext
   filePath: string
   chunkIndex: number
   text: string
@@ -228,6 +230,7 @@ export async function runQuery(args: string[], globalOptions: GlobalOptions = {}
         text: result.text,
         score: result.score,
         fileTitle: result.fileTitle ?? null,
+        ...(result.sourceContext ? { sourceContext: result.sourceContext } : {}),
         images: attachmentsByIdentity.get(result.id) ?? [],
       }
 

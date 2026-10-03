@@ -2,6 +2,7 @@
 
 import type { BaseDirsConfigError } from '../utils/base-dirs.js'
 import type { ContentFormat } from '../utils/raw-data-utils.js'
+import type { SourceContext } from '../utils/source-context.js'
 import type { QualityProfile } from '../utils/visual-profile.js'
 import type { GroupingMode } from '../vectordb/index.js'
 
@@ -35,6 +36,8 @@ interface RAGServerConfigBase {
   chunkMinLength?: number
   /** Embed each chunk behind its document title (optional, default: false) */
   titlePrefix?: boolean
+  /** Add section paths to chunk embeddings when they fit (default: false). */
+  headingPrefix?: boolean
   /** Store bounded PDF regions and Mammoth-produced DOCX images. */
   storeImages?: boolean
   /** External reranker command, as configured. Unset disables reranking. */
@@ -213,6 +216,7 @@ export interface ListFilesResult {
  * query_documents tool output
  */
 export interface QueryResult {
+  sourceContext?: SourceContext
   /** File path */
   filePath: string
   /** Chunk index */
@@ -246,6 +250,7 @@ export type ReadChunkNeighborsInput = DeleteFileInput & {
  * mirrors `QueryResult` so results are drop-in with query_documents.
  */
 export interface ReadChunkNeighborsResultItem {
+  sourceContext?: SourceContext
   /** File path */
   filePath: string
   /** Chunk index */

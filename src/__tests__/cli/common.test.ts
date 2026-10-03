@@ -158,9 +158,15 @@ describe('cli/common', () => {
     const originalDevice = process.env['RAG_DEVICE']
     const originalDtype = process.env['RAG_DTYPE']
     const originalTitlePrefix = process.env['EMBED_TITLE_PREFIX']
+    const originalHeadingPrefix = process.env['EMBED_HEADING_PREFIX']
 
     afterEach(() => {
       mocks.Embedder.mockReset()
+      if (originalHeadingPrefix === undefined) {
+        delete process.env['EMBED_HEADING_PREFIX']
+      } else {
+        process.env['EMBED_HEADING_PREFIX'] = originalHeadingPrefix
+      }
       if (originalTitlePrefix === undefined) {
         delete process.env['EMBED_TITLE_PREFIX']
       } else {
@@ -226,6 +232,17 @@ describe('cli/common', () => {
       process.env['EMBED_TITLE_PREFIX'] = 'on'
       createEmbedder(makeConfig({}))
       expect(mocks.Embedder.mock.calls[1]?.[0]).toMatchObject({ titlePrefix: true })
+    })
+
+    it('enables headings independently of the title prefix', () => {
+      delete process.env['EMBED_HEADING_PREFIX']
+      delete process.env['EMBED_TITLE_PREFIX']
+      createEmbedder(makeConfig({}))
+      expect(mocks.Embedder.mock.calls[0]?.[0]).not.toHaveProperty('headingPrefix')
+      process.env['EMBED_HEADING_PREFIX'] = 'on'
+      createEmbedder(makeConfig({}))
+      expect(mocks.Embedder.mock.calls[1]?.[0]).toMatchObject({ headingPrefix: true })
+      expect(mocks.Embedder.mock.calls[1]?.[0]).not.toHaveProperty('titlePrefix')
     })
 
     it('warns and leaves the title prefix off for an invalid EMBED_TITLE_PREFIX', () => {

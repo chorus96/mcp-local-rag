@@ -11,6 +11,11 @@ import { type EmbedderInterface, resolveContainmentBudget } from '../chunker/sem
 import type { ParseResult } from '../parser/index.js'
 import type { ImageRendition } from '../pdf-visual/types.js'
 import { MAX_VISUAL_RENDITION_BYTES } from '../utils/limits.js'
+import {
+  type SourceContext,
+  type SourceMap,
+  sourceContextForRange,
+} from '../utils/source-context.js'
 import type { VectorChunk, VisualAttachment } from '../vectordb/index.js'
 
 /** Distance from `offset` to a chunk's source span; 0 when it falls inside. */
@@ -48,7 +53,7 @@ async function resolveTitlePrefix(
 
 /** `embeddings` has the same length as `chunks`, index for index. */
 export interface BuildChunksAndEmbeddingsResult {
-  chunks: TextChunk[]
+  chunks: (TextChunk & { sourceContext?: SourceContext })[]
   embeddings: number[][]
 }
 
@@ -114,6 +119,7 @@ export async function buildChunksAndEmbeddings(
   chunker: SemanticChunker,
   embedder: EmbedderInterface,
   options: {
+    sourceMap?: SourceMap | undefined
     atomicRanges?: readonly AtomicTextRange[] | undefined
     title?: string | null | undefined
   } = {}
@@ -127,10 +133,48 @@ export async function buildChunksAndEmbeddings(
   if (chunks.length === 0) {
     return { chunks: [], embeddings: [] }
   }
-  // The prefix reaches the embedding only: stored text, the FTS index and
-  // returned results stay body-only.
-  const embeddings = await embedder.embedBatch(chunks.map((chunk) => prefix + chunk.text))
-  return { chunks, embeddings }
+  const sourceMap = options.sourceMap
+  const contextualChunks = chunks.map((chunk) => ({
+    ...chunk,
+    ...(sourceMap
+      ? {
+          sourceContext: sourceContextForRange(sourceMap, chunk.sourceStart, chunk.sourceEnd),
+        }
+      : {}),
+  }))
+  const inputs = await embeddingInputs(contextualChunks, prefix, embedder)
+  return { chunks: contextualChunks, embeddings: await embedder.embedBatch(inputs) }
+}
+
+/** Add optional section context only when the full body still fits. */
+async function embeddingInputs(
+  chunks: BuildChunksAndEmbeddingsResult['chunks'],
+  prefix: string,
+  embedder: EmbedderInterface
+): Promise<string[]> {
+  // Prefixes affect vectors only; stored text and the FTS index stay body-only.
+  const inputs = chunks.map((chunk) => prefix + chunk.text)
+  if (!embedder.headingPrefix) {
+    return inputs
+  }
+  const prefixes = chunks.map((chunk) => {
+    const paths = chunk.sourceContext?.headingPaths ?? []
+    return paths.length
+      ? `${prefix}${paths.map((path) => `Section: ${path.join(' > ')}`).join('\n')}\n\n`
+      : prefix
+  })
+  const candidates = chunks.map((chunk, i) => prefixes[i] + chunk.text)
+  const budget = await resolveContainmentBudget(embedder, '')
+  if (!budget) {
+    return candidates
+  }
+  const prefixSizes = await budget.countTokens(prefixes)
+  const inputSizes = await budget.countTokens(candidates)
+  return candidates.map((candidate, i) =>
+    (prefixSizes[i] ?? Infinity) <= budget.cap / 2 && (inputSizes[i] ?? Infinity) <= budget.cap
+      ? candidate
+      : (inputs[i] ?? '')
+  )
 }
 
 /**
@@ -143,6 +187,7 @@ export async function buildChunksFromParseResult(
   embedder: EmbedderInterface
 ): Promise<BuildChunksFromParseResultResult> {
   const computed = await buildChunksAndEmbeddings(result.content, chunker, embedder, {
+    sourceMap: result.sourceMap,
     atomicRanges: result.atomicRanges,
     title: result.embeddingTitle ?? result.title,
   })
@@ -203,7 +248,7 @@ export function computeContentHash(bytes: Uint8Array): string {
  */
 export function buildVectorChunks(params: {
   filePath: string
-  chunks: TextChunk[]
+  chunks: (TextChunk & { sourceContext?: SourceContext })[]
   embeddings: number[][]
   fileSize: number
   fileTitle: string | null
@@ -246,6 +291,7 @@ export function buildVectorChunks(params: {
         fileType: extname(filePath).slice(1),
       },
       fileTitle,
+      ...(chunk.sourceContext ? { sourceContext: JSON.stringify(chunk.sourceContext) } : {}),
       ...(contentHash === null ? {} : { contentHash }),
       ...(visualProfile === null || visualProfile === undefined ? {} : { visualProfile }),
       visualAttachments: JSON.stringify(attachments),

@@ -37,6 +37,8 @@ export interface EmbedderConfig {
    * (default: false). Read by ingestion, which builds the embedding input.
    */
   titlePrefix?: boolean
+  /** Add section paths to chunk embeddings when they fit (default: false). */
+  headingPrefix?: boolean
 }
 
 interface IndexedEmbeddingInput {
@@ -273,6 +275,10 @@ export class Embedder {
 
   constructor(config: EmbedderConfig) {
     this.config = config
+  }
+
+  get headingPrefix(): boolean {
+    return this.config.headingPrefix ?? false
   }
 
   get titlePrefix(): boolean {
