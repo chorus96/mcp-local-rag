@@ -185,6 +185,7 @@ function applyOptionalSettings(config: ServerConfig, env: NodeJS.ProcessEnv): st
   const chunkMinLength = parseChunkMinLength(env['CHUNK_MIN_LENGTH'])
   const storeImages = parseStoreImages(env['STORE_IMAGES'])
   const titlePrefix = parseBooleanEnv('EMBED_TITLE_PREFIX', env['EMBED_TITLE_PREFIX'])
+  const headingPrefix = parseBooleanEnv('EMBED_HEADING_PREFIX', env['EMBED_HEADING_PREFIX'])
   const rerankCommand = parseRerankCmd(env['RAG_RERANK_CMD'])
   const rerankTimeoutMs = parseRerankTimeoutMs(env['RAG_RERANK_TIMEOUT_MS'])
 
@@ -208,6 +209,7 @@ function applyOptionalSettings(config: ServerConfig, env: NodeJS.ProcessEnv): st
   }
   config.storeImages = storeImages.value
   config.titlePrefix = titlePrefix.value
+  config.headingPrefix = headingPrefix.value
   config.rerankTimeoutMs = rerankTimeoutMs.value ?? DEFAULT_RERANK_TIMEOUT_MS
 
   return [
@@ -218,6 +220,7 @@ function applyOptionalSettings(config: ServerConfig, env: NodeJS.ProcessEnv): st
     chunkMinLength,
     storeImages,
     titlePrefix,
+    headingPrefix,
     rerankCommand,
     rerankTimeoutMs,
   ]

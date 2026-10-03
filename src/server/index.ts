@@ -36,6 +36,7 @@ import {
 } from '../ingest/file.js'
 import { parseHtml } from '../parser/html-parser.js'
 import { DocumentParser, ValidationError } from '../parser/index.js'
+import { textSourceMap } from '../parser/text-source-map.js'
 import { extractMarkdownTitle, extractTxtTitle } from '../parser/title-extractor.js'
 import { type RerankResult, rerankCandidates } from '../rerank/index.js'
 import { type BaseDirsConfigError, displayPath } from '../utils/base-dirs.js'
@@ -343,6 +344,7 @@ export class RAGServer {
     if (config.titlePrefix) {
       embedderConfig.titlePrefix = true
     }
+    embedderConfig.headingPrefix = config.headingPrefix === true
     this.embedder = new Embedder(embedderConfig)
     this.chunker = new SemanticChunker(
       config.chunkMinLength !== undefined ? { minChunkLength: config.chunkMinLength } : {}
@@ -549,6 +551,7 @@ export class RAGServer {
         text: candidate.text,
         score: candidate.score,
         fileTitle: candidate.fileTitle ?? null,
+        ...(candidate.sourceContext ? { sourceContext: candidate.sourceContext } : {}),
         images: attachmentsById.get(candidate.id) ?? [],
       }
 
@@ -651,6 +654,7 @@ export class RAGServer {
       this.embedder,
       {
         title,
+        sourceMap: textSourceMap(text, true),
       }
     )
     return {
@@ -1097,6 +1101,7 @@ export class RAGServer {
         text: row.text,
         isTarget: row.chunkIndex === args.chunkIndex,
         fileTitle: row.fileTitle ?? null,
+        ...(row.sourceContext ? { sourceContext: row.sourceContext } : {}),
       }
       if (sourceForAll) {
         item.source = sourceForAll

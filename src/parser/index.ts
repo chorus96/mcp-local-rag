@@ -9,10 +9,12 @@ import type { Document as MupdfDocument } from 'mupdf'
 import { type AtomicTextRange, SemanticChunker } from '../chunker/index.js'
 import { withTrailingSeparator } from '../utils/base-dirs.js'
 import { AppError, isAppError, toError } from '../utils/errors.js'
+import type { HeadingAnchor, SourceMap } from '../utils/source-context.js'
 import { errorCode } from '../utils/type-guards.js'
 import { convertDocxDocumentToText, extractDocxCoreTitle } from './docx-parser.js'
 import { extractPdfPages } from './pdf-extract.js'
 import type { EmbedderInterface, FilteredTextFragment } from './pdf-filter.js'
+import { textSourceMap } from './text-source-map.js'
 import {
   extractDocxTitle,
   extractMarkdownTitle,
@@ -41,6 +43,7 @@ export const SUPPORTED_EXTENSIONS = new Set(['.pdf', '.docx', '.txt', '.md'])
  * embedding title prefix.
  */
 export interface ParseResult {
+  sourceMap?: SourceMap
   content: string
   title: string
   /**
@@ -317,10 +320,22 @@ export class DocumentParser {
         embedder,
         'preserve-whitespace'
       )
-      const text = pages
-        .map((p) => p.text)
-        .filter((t) => t.length > 0)
-        .join('\n\n')
+      let text = ''
+      const sourceMap: SourceMap = { headings: [], pages: [] }
+      for (const page of pages) {
+        if (!page.text) {
+          continue
+        }
+        if (text) {
+          text += '\n\n'
+        }
+        const start = text.length
+        text += page.text
+        sourceMap.pages?.push({ start, end: text.length, page: page.pageNum })
+        sourceMap.headings.push(
+          ...page.headings.map((heading) => ({ ...heading, offset: start + heading.offset }))
+        )
+      }
 
       const { title, embeddingTitle } = await resolvePdfTitle(
         filePath,
@@ -331,7 +346,7 @@ export class DocumentParser {
 
       console.error(`Parsed PDF: ${filePath} (${text.length} characters, ${pages.length} pages)`)
 
-      return { content: text, title, embeddingTitle }
+      return { content: text, title, embeddingTitle, sourceMap }
     } catch (error) {
       // A foreign domain error (an `EmbeddingError` raised while the parser
       // used the embedder) keeps its identity rather than being relabelled a
@@ -365,6 +380,7 @@ export class DocumentParser {
     embeddingTitle: string
     pages: Array<{
       pageNum: number
+      headings?: HeadingAnchor[]
       text: string
       textFragments: FilteredTextFragment[]
       stextJson: unknown
@@ -390,6 +406,7 @@ export class DocumentParser {
       const { pages: helperPages, metadataTitle, page1FontHint } = extracted
       const pages = helperPages.map((page) => ({
         pageNum: page.pageNum,
+        headings: page.headings,
         text: page.text,
         textFragments: page.textFragments,
         stextJson: page.stextJson,
@@ -479,6 +496,7 @@ export class DocumentParser {
       })
       return {
         content: body.content,
+        ...(body.sourceMap ? { sourceMap: body.sourceMap } : {}),
         title: titleResult.title,
         ...(body.atomicRanges.length === 0 ? {} : { atomicRanges: body.atomicRanges }),
         ...(imageAnchors.length === 0 ? {} : { imageAnchors }),
@@ -495,7 +513,7 @@ export class DocumentParser {
       const fileName = basename(filePath)
       const titleResult = extractTxtTitle(text, fileName)
       console.error(`Parsed TXT: ${filePath} (${text.length} characters)`)
-      return { content: text, title: titleResult.title }
+      return { content: text, title: titleResult.title, sourceMap: textSourceMap(text, false) }
     } catch (error) {
       throw new FileOperationError(`Failed to parse TXT: ${filePath}`, { cause: toError(error) })
     }
@@ -508,7 +526,7 @@ export class DocumentParser {
       const fileName = basename(filePath)
       const titleResult = extractMarkdownTitle(text, fileName)
       console.error(`Parsed MD: ${filePath} (${text.length} characters)`)
-      return { content: text, title: titleResult.title }
+      return { content: text, title: titleResult.title, sourceMap: textSourceMap(text, true) }
     } catch (error) {
       throw new FileOperationError(`Failed to parse MD: ${filePath}`, { cause: toError(error) })
     }

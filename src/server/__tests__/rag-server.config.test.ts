@@ -94,6 +94,21 @@ describe('EMBED_TITLE_PREFIX configuration', () => {
   })
 })
 
+describe('EMBED_HEADING_PREFIX configuration', () => {
+  it('threads the independent value and invalid-value warning', async () => {
+    const cwd = resolve('./tmp/test-lancedb-config-shape')
+    expect((await resolveServerConfig({ BASE_DIR: cwd }, cwd)).headingPrefix).toBe(false)
+    const enabled = await resolveServerConfig({ BASE_DIR: cwd, EMBED_HEADING_PREFIX: 'on' }, cwd)
+    expect(enabled.headingPrefix).toBe(true)
+    expect(enabled.titlePrefix).toBe(false)
+    const invalid = await resolveServerConfig({ BASE_DIR: cwd, EMBED_HEADING_PREFIX: 'maybe' }, cwd)
+    expect(invalid.headingPrefix).toBe(false)
+    expect(invalid.configWarnings).toContain(
+      'Invalid EMBED_HEADING_PREFIX value: "maybe". Expected one of 1, true, yes, on, 0, false, no, or off. Using false.'
+    )
+  })
+})
+
 describe('RAGServerConfig degraded-mode construction guards (P3-T1)', () => {
   const testDbPath = resolve('./tmp/test-lancedb-config-shape')
 

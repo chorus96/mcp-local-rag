@@ -85,6 +85,13 @@ export function createEmbedder(config: ResolvedGlobalConfig): Embedder {
   if (titlePrefix.value) {
     embedderConfig.titlePrefix = true
   }
+  const headingPrefix = parseBooleanEnv('EMBED_HEADING_PREFIX', process.env['EMBED_HEADING_PREFIX'])
+  if (headingPrefix.warning !== undefined) {
+    console.error(headingPrefix.warning)
+  }
+  if (headingPrefix.value) {
+    embedderConfig.headingPrefix = true
+  }
   return new Embedder(embedderConfig)
 }
 

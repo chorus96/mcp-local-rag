@@ -8,13 +8,13 @@
     "url": "https://github.com/shinpr/mcp-local-rag",
     "source": "github"
   },
-  "version": "0.20.1",
+  "version": "0.21.0",
   "packages": [
     {
       "registryType": "npm",
       "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "mcp-local-rag",
-      "version": "0.20.1",
+      "version": "0.21.0",
       "transport": {
         "type": "stdio"
       },
@@ -106,6 +106,13 @@
         {
           "name": "EMBED_TITLE_PREFIX",
           "description": "Embed each chunk together with its document title, which can help when passages don't restate the topic the title names (defaults to false). After changing it, use a new DB_PATH or delete the index and re-ingest.",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false
+        },
+        {
+          "name": "EMBED_HEADING_PREFIX",
+          "description": "Add section headings to chunk embeddings when they fit (defaults to false). Independent of EMBED_TITLE_PREFIX. Re-ingest documents after changing it.",
           "isRequired": false,
           "format": "string",
           "isSecret": false

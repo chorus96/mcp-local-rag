@@ -2,6 +2,7 @@
 
 import { AppError } from '../utils/errors.js'
 import { MAX_VISUAL_RENDITION_BYTES } from '../utils/limits.js'
+import { parseSourceContext, type SourceContext } from '../utils/source-context.js'
 import { isInteger, isRecord } from '../utils/type-guards.js'
 
 // ============================================
@@ -96,6 +97,8 @@ export interface VisualAttachment {
  * Vector chunk
  */
 export interface VectorChunk {
+  /** JSON display context, absent on legacy rows. */
+  sourceContext?: string
   /** Chunk ID (UUID) */
   id: string
   /** File path (absolute) */
@@ -128,6 +131,7 @@ export interface VectorChunk {
  * Search result
  */
 export interface SearchResult {
+  sourceContext?: SourceContext
   /** Stable persisted row identity used for attachment hydration. */
   id: string
   /** File path */
@@ -161,6 +165,7 @@ export interface AttachmentHydrationResult {
  * no score (not ranked) and no metadata (not needed here).
  */
 export interface ChunkRow {
+  sourceContext?: SourceContext
   /** File path (absolute) */
   filePath: string
   /** Chunk index (zero-based) */
@@ -175,6 +180,7 @@ export interface ChunkRow {
  * Raw result from LanceDB query (internal type)
  */
 export interface LanceDBRawResult {
+  sourceContext?: string | null
   id: string
   filePath: string
   chunkIndex: number
@@ -265,6 +271,7 @@ export function toSearchResult(raw: unknown): SearchResult {
     score: raw._distance ?? raw._score ?? 0,
     metadata: raw.metadata,
     fileTitle: raw.fileTitle || null,
+    ...contextProperty(raw.sourceContext),
   }
 }
 
@@ -289,6 +296,7 @@ export function toVectorChunk(raw: unknown): VectorChunk {
     contentHash,
     visualAttachments,
     visualProfile,
+    sourceContext,
     timestamp,
   } = raw
   if (
@@ -319,6 +327,7 @@ export function toVectorChunk(raw: unknown): VectorChunk {
     // (missing column, NULL, create-path ''). Any other string is preserved
     // verbatim so a backup taken here restores the row unchanged.
     ...(typeof visualProfile === 'string' && visualProfile.length > 0 ? { visualProfile } : {}),
+    ...(typeof sourceContext === 'string' && sourceContext ? { sourceContext } : {}),
     visualAttachments: normalizeVisualAttachments(visualAttachments),
     timestamp,
   }
@@ -431,7 +440,7 @@ export function toChunkRow(raw: unknown): ChunkRow {
   const rawFileTitle = raw['fileTitle']
   const fileTitle =
     typeof rawFileTitle === 'string' && rawFileTitle.length > 0 ? rawFileTitle : null
-  return { filePath, chunkIndex, text, fileTitle }
+  return { filePath, chunkIndex, text, fileTitle, ...contextProperty(raw['sourceContext']) }
 }
 
 // ============================================
@@ -446,4 +455,9 @@ export class DatabaseError extends AppError {
     super(message, 'vectordb', 'internal', options)
     this.name = 'DatabaseError'
   }
+}
+
+function contextProperty(value: unknown): { sourceContext?: SourceContext } {
+  const sourceContext = parseSourceContext(value)
+  return sourceContext ? { sourceContext } : {}
 }

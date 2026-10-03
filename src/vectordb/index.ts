@@ -160,7 +160,7 @@ export class VectorStore {
       const raw = await this.table
         .query()
         .where(predicate)
-        .select(['filePath', 'chunkIndex', 'text', 'fileTitle'])
+        .select(['filePath', 'chunkIndex', 'text', 'fileTitle', 'sourceContext'])
         .toArray()
       const rows = raw.map((row) => toChunkRow(row))
       // Contractual ascending sort; do not rely on storage order.
@@ -217,6 +217,7 @@ export class VectorStore {
         const records = chunks.map((chunk) => ({
           ...chunk,
           fileTitle: chunk.fileTitle ?? '',
+          sourceContext: chunk.sourceContext ?? '',
           contentHash: chunk.contentHash ?? '',
           visualProfile: chunk.visualProfile ?? '',
           visualAttachments: normalizeVisualAttachments(chunk.visualAttachments),
@@ -234,6 +235,7 @@ export class VectorStore {
         const records = chunks.map((chunk) => ({
           ...chunk,
           visualProfile: chunk.visualProfile ?? null,
+          sourceContext: chunk.sourceContext ?? null,
           visualAttachments: normalizeVisualAttachments(chunk.visualAttachments),
         }))
         await this.table.add(records)
@@ -304,6 +306,10 @@ export class VectorStore {
     const schema = await this.table.schema()
     const hasField = (name: string): boolean =>
       schema.fields.some((f: { name: string }) => f.name === name)
+
+    if (!hasField('sourceContext')) {
+      await this.table.addColumns([{ name: 'sourceContext', valueSql: 'cast(NULL as string)' }])
+    }
 
     if (!hasField('fileTitle')) {
       await this.table.addColumns([{ name: 'fileTitle', valueSql: 'cast(NULL as string)' }])
@@ -418,7 +424,16 @@ export class VectorStore {
       let query = this.table
         .vectorSearch(queryVector)
         .distanceType('dot')
-        .select(['id', 'filePath', 'chunkIndex', 'text', 'metadata', 'fileTitle', '_distance'])
+        .select([
+          'id',
+          'filePath',
+          'chunkIndex',
+          'text',
+          'metadata',
+          'fileTitle',
+          'sourceContext',
+          '_distance',
+        ])
         .limit(candidateLimit)
 
       // Restrict to chunks under the given prefixes (exact-or-descendant)
