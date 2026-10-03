@@ -125,6 +125,22 @@ describe('buildChunksAndEmbeddings heading prefix', () => {
     return { result, embedBatch }
   }
 
+  it('skips heading token counting when no chunk has heading context', async () => {
+    const text = 'Body.'
+    const countTokens = vi.fn(async (texts: string[]) => texts.map(() => 1))
+    const embedBatch = vi.fn().mockResolvedValue([[1, 0]])
+    await buildChunksAndEmbeddings(
+      text,
+      asDouble<SemanticChunker>({
+        chunkText: async () => [{ text, index: 0, sourceStart: 0, sourceEnd: text.length }],
+      }),
+      { headingPrefix: true, getTokenLimit: async () => 512, countTokens, embedBatch },
+      { sourceMap: { headings: [] } }
+    )
+    expect(embedBatch).toHaveBeenCalledWith([text])
+    expect(countTokens).not.toHaveBeenCalled()
+  })
+
   it('adds section context only to embedding input when enabled', async () => {
     const { result, embedBatch } = await run(true)
     expect(embedBatch).toHaveBeenCalledWith([

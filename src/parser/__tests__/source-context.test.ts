@@ -38,4 +38,20 @@ describe('source context', () => {
       headingPaths: [['Guide', 'Setup']],
     })
   })
+  it.each(['- item two', '* item', '+ item', '1. item', '1) item', '> quote', '---'])(
+    'does not treat block syntax %s followed by a rule as a setext heading',
+    (block) => {
+      expect(textSourceMap(`${block}\n---\n# Real`, true).headings.map((h) => h.text)).toEqual([
+        'Real',
+      ])
+    }
+  )
+
+  it.each(['\n', '\r\n'])('ignores empty frontmatter with line ending %j', (newline) => {
+    expect(
+      textSourceMap(['---', '---', '# Real', '', '---'].join(newline), true).headings.map(
+        (h) => h.text
+      )
+    ).toEqual(['Real'])
+  })
 })

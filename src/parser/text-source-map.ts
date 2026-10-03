@@ -4,7 +4,7 @@ import type { HeadingAnchor, SourceMap } from '../utils/source-context.js'
 function markdownHeadings(text: string): HeadingAnchor[] {
   // Replace excluded blocks with spaces to retain exact source offsets.
   const prose = text
-    .replace(/^---\r?\n[\s\S]*?\r?\n(?:---|\.\.\.)[^\n]*(?:\n|$)/, (match) =>
+    .replace(/^---\r?\n(?:[^\n]*\n)*?(?:---|\.\.\.)[ \t]*(?:\r?\n|$)/, (match) =>
       match.replace(/[^\n]/g, ' ')
     )
     .replace(
@@ -17,7 +17,8 @@ function markdownHeadings(text: string): HeadingAnchor[] {
     const atx = match[1]
     const title = atx ? (match[2] ?? '').replace(/\s+#+\s*$/, '').trim() : (match[3] ?? '').trim()
     const setextLevel = match[4]?.startsWith('=') ? 1 : 2
-    if (title && !/^ {4}/.test(match[0])) {
+    const blockSyntax = /^(?:>|[-+*]\s|\d+[.)]\s|[-*_]+$)/.test(title)
+    if (title && !/^ {4}/.test(match[0]) && (atx || !blockSyntax)) {
       headings.push({
         offset: match.index,
         level: atx ? atx.length : setextLevel,

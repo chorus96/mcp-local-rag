@@ -154,7 +154,10 @@ async function embeddingInputs(
 ): Promise<string[]> {
   // Prefixes affect vectors only; stored text and the FTS index stay body-only.
   const inputs = chunks.map((chunk) => prefix + chunk.text)
-  if (!embedder.headingPrefix) {
+  if (
+    !embedder.headingPrefix ||
+    !chunks.some((chunk) => chunk.sourceContext?.headingPaths.length)
+  ) {
     return inputs
   }
   const prefixes = chunks.map((chunk) => {
