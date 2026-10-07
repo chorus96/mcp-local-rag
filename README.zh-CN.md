@@ -12,7 +12,8 @@
   <a href="README.de.md">Deutsch</a> |
   <a href="README.es.md">Español</a> |
   <a href="README.pt-BR.md">Português (Brasil)</a> |
-  <a href="README.fr.md">Français</a>
+  <a href="README.fr.md">Français</a> |
+  <a href="README.ko.md">한국어</a>
 </p>
 
 通过 MCP 客户端或终端搜索私有文档，无需将内容发送给嵌入 API。

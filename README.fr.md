@@ -19,7 +19,8 @@ Registry](https://img.shields.io/badge/MCP-Registry-green.svg)](https://registry
   <a href="README.de.md">Deutsch</a> |
   <a href="README.es.md">Español</a> |
   <a href="README.pt-BR.md">Português (Brasil)</a> |
-  <strong>Français</strong>
+  <strong>Français</strong> |
+  <a href="README.ko.md">한국어</a>
 </p>
 
 Recherchez dans des documents confidentiels depuis un client MCP ou un terminal, sans les

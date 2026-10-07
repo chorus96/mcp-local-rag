@@ -19,7 +19,8 @@ Registry](https://img.shields.io/badge/MCP-Registry-green.svg)](https://registry
   <a href="README.de.md">Deutsch</a> |
   <a href="README.es.md">Español</a> |
   <a href="README.pt-BR.md">Português (Brasil)</a> |
-  <a href="README.fr.md">Français</a>
+  <a href="README.fr.md">Français</a> |
+  <a href="README.ko.md">한국어</a>
 </p>
 
 Search private documents from an MCP client or the terminal without sending them to an
